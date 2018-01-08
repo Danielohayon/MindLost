@@ -1,6 +1,6 @@
 ﻿namespace Encryptor
 {
-    internal class Program
+    internal class EncryptorClass
     {
         public static void Main(string[] args)
         {
