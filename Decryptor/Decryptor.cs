@@ -51,11 +51,6 @@ namespace Decryptor
 
         }
 
-        public static bool correctTargetExtension(string fileExtension)
-        {
-            return targetExtensions.Exists(e => e == fileExtension);
-        }
-
         public static void decryptFile(string filePath, AesCryptoServiceProvider aes)
         {
             //create new file name
