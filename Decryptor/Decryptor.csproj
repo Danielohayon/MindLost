@@ -41,6 +41,12 @@
     <Compile Include="Decryptor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Encryptor\Encryptor.csproj">
+      <Project>{D79193FD-5C58-4767-9123-485DF06CC57E}</Project>
+      <Name>Encryptor</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
          Other similar extension points exist, see Microsoft.Common.targets.

